@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Panel of Experts"
+description = "A members-only home for people who want thoughtful guidance from experienced experts. This first version provides branded account creation, sign-in, and a protected member page."
+version = "1.0.0"
+id = "artifacts/panel-of-experts"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18386
+
+[services.development]
+run = "pnpm --filter @workspace/panel-of-experts run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/panel-of-experts", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/panel-of-experts/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18386"
+BASE_PATH = "/"
