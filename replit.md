@@ -1,45 +1,41 @@
-# [Project name]
+# Panel of Experts
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A members-only website with a public landing page, branded Clerk sign-in and account creation, and a protected member welcome page.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+Use Replit's Run button to start the two managed artifact workflows:
 
-## Stack
+- `artifacts/panel-of-experts: web` — React/Vite frontend at `/`.
+- `artifacts/api-server: API Server` — Express backend at `/api`.
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+The managed workflows supply `PORT` and `BASE_PATH`; do not start a replacement root-level dev server.
 
-## Where things live
+- `pnpm install --frozen-lockfile` — install dependencies.
+- `pnpm run typecheck` — check all workspace packages.
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas after API contract changes.
+- `GET /api/healthz` — returns `{"status":"ok"}` when the API is running.
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+## Environment
 
-## Architecture decisions
+Clerk authentication is provisioned through Replit. Its required keys are stored in Secrets: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, and `VITE_CLERK_PUBLISHABLE_KEY`. Manage login providers through the Auth pane. Development and production use separate Clerk user stores.
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+The current routes do not use PostgreSQL, so no database is needed to run this version. The existing `@workspace/db` package requires `DATABASE_URL` if future features import it; configure a database before adding persistent data features.
 
-## Product
+## Stack & Layout
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- pnpm workspaces and TypeScript.
+- `artifacts/panel-of-experts` — React 19, Vite, Tailwind CSS, Wouter, and Clerk.
+- `artifacts/api-server` — Express, Clerk middleware/proxy, and Pino logging.
+- `lib/api-spec` — OpenAPI source of truth.
+- `lib/api-client-react` and `lib/api-zod` — generated API client and validation schemas.
+- `lib/db` — PostgreSQL/Drizzle support, currently unused by app routes.
 
-## User preferences
+## Routing
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- `/` — public landing page; signed-in visitors go to `/member`.
+- `/sign-in` and `/sign-up` — branded authentication screens.
+- `/member` — signed-in member page.
+- `/api/healthz` — API health check.
 
-## Gotchas
-
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+Preserve the existing Clerk proxy wiring for publishing. Its proxy is intentionally inactive during development.
