@@ -1,7 +1,7 @@
 kind = "web"
 previewPath = "/"
 title = "Panel of Experts"
-description = "A members-only home for people who want thoughtful guidance from experienced experts. This first version provides branded account creation, sign-in, and a protected member page."
+description = "A private workspace for building a personal panel of specialists, asking questions, and saving searchable expert perspectives."
 version = "1.0.0"
 id = "artifacts/panel-of-experts"
 router = "path"

@@ -1,6 +1,6 @@
 # Panel of Experts
 
-A members-only website with a public landing page, branded Clerk sign-in and account creation, and a protected member welcome page.
+A members-only workspace for creating a personal expert panel, asking questions, and recording searchable answers.
 
 ## Run & Operate
 
@@ -13,6 +13,8 @@ The managed workflows supply `PORT` and `BASE_PATH`; do not start a replacement 
 
 - `pnpm install --frozen-lockfile` — install dependencies.
 - `pnpm run typecheck` — check all workspace packages.
+- `pnpm run build` — typecheck and build workspace packages.
+- `pnpm --filter @workspace/db run push` — apply additive development schema changes.
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas after API contract changes.
 - `GET /api/healthz` — returns `{"status":"ok"}` when the API is running.
 
@@ -20,22 +22,25 @@ The managed workflows supply `PORT` and `BASE_PATH`; do not start a replacement 
 
 Clerk authentication is provisioned through Replit. Its required keys are stored in Secrets: `CLERK_SECRET_KEY`, `CLERK_PUBLISHABLE_KEY`, and `VITE_CLERK_PUBLISHABLE_KEY`. Manage login providers through the Auth pane. Development and production use separate Clerk user stores.
 
-The current routes do not use PostgreSQL, so no database is needed to run this version. The existing `@workspace/db` package requires `DATABASE_URL` if future features import it; configure a database before adding persistent data features.
+Replit's development PostgreSQL database stores expert profiles, questions, and answers. `DATABASE_URL` is provided by the managed environment; never commit database credentials. Production schema changes follow Replit's Publish flow.
 
 ## Stack & Layout
 
 - pnpm workspaces and TypeScript.
 - `artifacts/panel-of-experts` — React 19, Vite, Tailwind CSS, Wouter, and Clerk.
-- `artifacts/api-server` — Express, Clerk middleware/proxy, and Pino logging.
+- `artifacts/api-server` — Express, Clerk middleware/proxy, authenticated API routes, and Pino logging.
 - `lib/api-spec` — OpenAPI source of truth.
 - `lib/api-client-react` and `lib/api-zod` — generated API client and validation schemas.
-- `lib/db` — PostgreSQL/Drizzle support, currently unused by app routes.
+- `lib/db/src/schema` — PostgreSQL/Drizzle tables for experts, questions, and answers.
 
 ## Routing
 
-- `/` — public landing page; signed-in visitors go to `/member`.
+- `/` — public landing page; signed-in visitors go to `/dashboard`.
 - `/sign-in` and `/sign-up` — branded authentication screens.
-- `/member` — signed-in member page.
+- `/dashboard` — member overview.
+- `/experts` and `/experts/:id` — manage the panel and view expert histories.
+- `/ask` — create a question for one expert or the full panel.
+- `/questions` and `/questions/:id` — search/filter question threads and record answers.
 - `/api/healthz` — API health check.
 
-Preserve the existing Clerk proxy wiring for publishing. Its proxy is intentionally inactive during development.
+All member API calls are scoped to the signed-in Clerk user. Expert removal archives the profile so linked question and answer history remains. Answers are manually recorded in v1; AI generation is not enabled. Preserve the existing Clerk proxy wiring for publishing; its proxy is intentionally inactive during development.

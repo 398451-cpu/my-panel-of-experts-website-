@@ -1,22 +1,22 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Panel of Experts API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: experts
+  - name: questions
+  - name: search
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +24,364 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /experts:
+    get:
+      operationId: getExperts
+      tags: [experts]
+      summary: List the signed-in user's experts
+      responses:
+        "200":
+          description: Experts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Expert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createExpert
+      tags: [experts]
+      summary: Create an expert
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpertInput"
+      responses:
+        "201":
+          description: Created expert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /experts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/ExpertId"
+    get:
+      operationId: getExpert
+      tags: [experts]
+      summary: Get an expert profile
+      responses:
+        "200":
+          description: Expert profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expert"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateExpert
+      tags: [experts]
+      summary: Update an expert profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExpertUpdate"
+      responses:
+        "200":
+          description: Updated expert
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Expert"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteExpert
+      tags: [experts]
+      summary: Archive an expert profile
+      responses:
+        "204":
+          description: Expert archived
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /questions:
+    get:
+      operationId: getQuestions
+      tags: [questions]
+      summary: List question threads
+      parameters:
+        - name: expertId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: topic
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, answered, open]
+      responses:
+        "200":
+          description: Question threads
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/QuestionThread"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createQuestion
+      tags: [questions]
+      summary: Ask an expert or the whole panel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuestionInput"
+      responses:
+        "201":
+          description: Created question
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionThread"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /questions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/QuestionId"
+    get:
+      operationId: getQuestion
+      tags: [questions]
+      summary: Get a question and its answers
+      responses:
+        "200":
+          description: Question thread
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuestionThread"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /questions/{id}/answers:
+    parameters:
+      - $ref: "#/components/parameters/QuestionId"
+    get:
+      operationId: getQuestionAnswers
+      tags: [questions]
+      summary: List answers for a question
+      responses:
+        "200":
+          description: Answers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Answer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: createQuestionAnswer
+      tags: [questions]
+      summary: Add an expert's answer to a question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerInput"
+      responses:
+        "201":
+          description: Created answer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Answer"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /search:
+    get:
+      operationId: searchPanel
+      tags: [search]
+      summary: Search experts, questions, and answers
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 120
+      responses:
+        "200":
+          description: Matching panel content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
+  parameters:
+    ExpertId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+    QuestionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Sign-in is required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
-
+      required: [status]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Expert:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        specialty: { type: string }
+        bio: { type: string }
+        avatarUrl: { type: ["string", "null"] }
+        tone: { type: string }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, specialty, bio, avatarUrl, tone, createdAt, updatedAt]
+    ExpertInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        specialty: { type: string, minLength: 1, maxLength: 100 }
+        bio: { type: string, maxLength: 1200 }
+        avatarUrl: { type: ["string", "null"], format: uri }
+        tone: { type: string, minLength: 1, maxLength: 60 }
+      required: [name, specialty, bio, tone]
+    ExpertUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        specialty: { type: string, minLength: 1, maxLength: 100 }
+        bio: { type: string, maxLength: 1200 }
+        avatarUrl: { type: ["string", "null"], format: uri }
+        tone: { type: string, minLength: 1, maxLength: 60 }
+    QuestionInput:
+      type: object
+      properties:
+        body: { type: string, minLength: 1, maxLength: 3000 }
+        topic: { type: string, minLength: 1, maxLength: 80 }
+        expertId: { type: ["integer", "null"] }
+      required: [body, topic, expertId]
+    Question:
+      type: object
+      properties:
+        id: { type: integer }
+        body: { type: string }
+        topic: { type: string }
+        expertId: { type: ["integer", "null"] }
+        expertName: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, body, topic, expertId, expertName, createdAt]
+    QuestionThread:
+      allOf:
+        - $ref: "#/components/schemas/Question"
+        - type: object
+          properties:
+            answers:
+              type: array
+              items:
+                $ref: "#/components/schemas/Answer"
+          required: [answers]
+    AnswerInput:
+      type: object
+      properties:
+        expertId: { type: integer }
+        body: { type: string, minLength: 1, maxLength: 5000 }
+      required: [expertId, body]
+    Answer:
+      type: object
+      properties:
+        id: { type: integer }
+        questionId: { type: integer }
+        expertId: { type: integer }
+        expertName: { type: string }
+        body: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, questionId, expertId, expertName, body, createdAt]
+    SearchResults:
+      type: object
+      properties:
+        experts:
+          type: array
+          items: { $ref: "#/components/schemas/Expert" }
+        questions:
+          type: array
+          items: { $ref: "#/components/schemas/Question" }
+        answers:
+          type: array
+          items: { $ref: "#/components/schemas/Answer" }
+      required: [experts, questions, answers]

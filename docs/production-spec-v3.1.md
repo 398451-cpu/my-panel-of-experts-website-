@@ -60,8 +60,8 @@ A web app where the user assembles a personal "panel of experts": profiles of sp
 
 ## §9 — Open Questions
 
-- Is AI-generated answering in scope for v1, or manual answers only?
-- Auth needed at launch?
+- **AI-generated answers:** Not included in v1. Members manually record an expert's answer on the question thread.
+- **Authentication:** Included. Clerk protects member pages and scopes expert profiles, questions, and answers to the signed-in user.
 
 ---
 

@@ -1,8 +1,9 @@
-import { useUser, useClerk, ClerkProvider, SignIn, SignUp, Show } from '@clerk/react';
+import { ClerkProvider, SignIn, SignUp, Show } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { ArrowRight, LockKeyhole, Sparkles } from 'lucide-react';
 import { Link, Redirect, Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
+import { MemberApp } from './components/member-app';
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -140,7 +141,7 @@ function LandingPage() {
 function HomeRedirect() {
   return (
     <>
-      <Show when="signed-in"><Redirect to="/member" /></Show>
+      <Show when="signed-in"><Redirect to="/dashboard" /></Show>
       <Show when="signed-out"><LandingPage /></Show>
     </>
   );
@@ -178,53 +179,10 @@ function AuthPage({ mode }: { mode: 'sign-in' | 'sign-up' }) {
   );
 }
 
-function MemberPage() {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
-  const displayName = user?.fullName || user?.firstName || 'Member';
-  const email = user?.primaryEmailAddress?.emailAddress || user?.emailAddresses[0]?.emailAddress || '';
-  const initials = displayName.split(/\s+/).slice(0, 2).map((part) => part.charAt(0)).join('').toUpperCase();
-
-  return (
-    <main className="member-page">
-      <nav className="site-nav" aria-label="Member navigation">
-        <Brand />
-        <Link href="/" className="nav-signin" data-testid="link-member-home">Home</Link>
-      </nav>
-      <section className="member-main">
-        <div className="member-card">
-          <div className="member-overline">Your member space</div>
-          <h1>Welcome to your panel.</h1>
-          <p className="member-description">A thoughtful place to find a little perspective.</p>
-          {!isLoaded ? (
-            <div className="member-loading" aria-label="Loading account details" data-testid="status-member-loading">
-              <div className="skeleton skeleton-avatar" />
-              <div className="skeleton-lines"><div className="skeleton skeleton-line" /><div className="skeleton skeleton-line short" /></div>
-            </div>
-          ) : (
-            <>
-              <div className="identity-block" data-testid="display-account-identity">
-                <div className="identity-mark">{initials || 'M'}</div>
-                <div>
-                  <div className="identity-name">{displayName}</div>
-                  {email && <div className="identity-email">{email}</div>}
-                </div>
-              </div>
-              <button type="button" className="signout-button" onClick={() => signOut({ redirectUrl: basePath || '/' })} data-testid="button-sign-out">
-                Sign out <ArrowRight size={15} />
-              </button>
-            </>
-          )}
-        </div>
-      </section>
-    </main>
-  );
-}
-
 function ProtectedMemberPage() {
   return (
     <>
-      <Show when="signed-in"><MemberPage /></Show>
+      <Show when="signed-in"><MemberApp /></Show>
       <Show when="signed-out"><Redirect to="/" /></Show>
     </>
   );
@@ -250,7 +208,13 @@ function ClerkRoutes() {
         <Route path="/" component={HomeRedirect} />
         <Route path="/sign-in/*?" component={() => <AuthPage mode="sign-in" />} />
         <Route path="/sign-up/*?" component={() => <AuthPage mode="sign-up" />} />
-        <Route path="/member" component={ProtectedMemberPage} />
+        <Route path="/dashboard" component={ProtectedMemberPage} />
+        <Route path="/ask" component={ProtectedMemberPage} />
+        <Route path="/questions" component={ProtectedMemberPage} />
+        <Route path="/questions/:id" component={ProtectedMemberPage} />
+        <Route path="/experts" component={ProtectedMemberPage} />
+        <Route path="/experts/:id" component={ProtectedMemberPage} />
+        <Route><Redirect to="/" /></Route>
       </Switch>
     </ClerkProvider>
   );

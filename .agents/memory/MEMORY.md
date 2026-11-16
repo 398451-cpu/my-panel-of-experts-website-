@@ -1,0 +1,1 @@
+- [Orval runtime](orval-runtime.md) — This workspace’s API generator needs Node 24; Node 20 fails because `Map.groupBy` is unavailable.
